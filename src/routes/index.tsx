@@ -35,9 +35,8 @@ export const Route = createFileRoute("/")({
 });
 
 type Product = {
-  id: string;
+  id: number;
   title: string;
-  brand: string | null;
   price_egp: number;
   image_url: string | null;
   product_url: string | null;
@@ -79,6 +78,41 @@ function formatEGP(n: number) {
   return `EGP ${n.toLocaleString("en-EG")}`;
 }
 
+function getProductUrl(value: string | null) {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    if (url.protocol === "http:") url.protocol = "https:";
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+function ProductImage({ src, title }: { src: string | null; title: string }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (!src || hasError) {
+    return (
+      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+        Image unavailable
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={title}
+      loading="lazy"
+      onError={() => setHasError(true)}
+      className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+    />
+  );
+}
+
 function Index() {
   const [search, setSearch] = useState("");
   const [size, setSize] = useState<string | null>(null);
@@ -87,14 +121,22 @@ function Index() {
   const [maxPrice, setMaxPrice] = useState("");
   const [shuffleKey, setShuffleKey] = useState(0);
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading, error } = useQuery({
     queryKey: ["scraper_products"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("scraper_products")
-        .select("id, title, brand, price_egp, image_url, product_url, sizes, colors");
+        .select("id, product_title, price, product_image_src, product_url, sizes, colors");
       if (error) throw error;
-      return data as Product[];
+      return data.map((product) => ({
+        id: product.id,
+        title: product.product_title,
+        price_egp: Number(product.price),
+        image_url: product.product_image_src,
+        product_url: product.product_url,
+        sizes: product.sizes,
+        colors: product.colors,
+      }));
     },
   });
 
@@ -109,7 +151,7 @@ function Index() {
     const min = minPrice ? Number(minPrice) : null;
     const max = maxPrice ? Number(maxPrice) : null;
     const filtered = products.filter((p) => {
-      if (q && !`${p.title} ${p.brand ?? ""}`.toLowerCase().includes(q)) return false;
+      if (q && !p.title.toLowerCase().includes(q)) return false;
       if (size && !(p.sizes ?? []).includes(size)) return false;
       if (colors.length > 0) {
         const pc = (p.colors ?? []).map((c) => c.toLowerCase());
@@ -174,7 +216,7 @@ function Index() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name or brand…"
+                  placeholder="Search by product name…"
                   className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
@@ -286,6 +328,15 @@ function Index() {
                 </div>
               ))}
             </div>
+          ) : error ? (
+            <div className="rounded-2xl border border-destructive/30 bg-card py-12 text-center">
+              <p className="font-display text-xl font-bold text-foreground">
+                Couldn’t load shoes
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Check the Supabase connection and try again.
+              </p>
+            </div>
           ) : results.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-card py-20 text-center">
               <p className="font-display text-xl font-bold text-foreground">No shoes match</p>
@@ -303,56 +354,49 @@ function Index() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {results.map((p) => (
-                <a
-                  key={p.id}
-                  href={p.product_url ?? "#"}
-                  target={p.product_url && p.product_url !== "#" ? "_blank" : undefined}
-                  rel="noreferrer"
-                  className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
-                >
-                  <div className="aspect-square overflow-hidden bg-muted">
-                    {p.image_url ? (
-                      <img
-                        src={p.image_url}
-                        alt={p.title}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-muted-foreground">
-                        No image
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    {p.brand && (
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {p.brand}
-                      </p>
-                    )}
-                    <h3 className="mt-0.5 line-clamp-1 font-display font-bold text-foreground">
-                      {p.title}
-                    </h3>
-                    <p className="mt-1 font-semibold text-primary">{formatEGP(p.price_egp)}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-1">
-                      {(p.colors ?? []).slice(0, 5).map((c) => (
-                        <span
-                          key={c}
-                          title={c}
-                          className="h-3 w-3 rounded-full border border-border"
-                          style={{ backgroundColor: COLOR_SWATCHES[c.toLowerCase()] ?? "#ccc" }}
-                        />
-                      ))}
+              {results.map((p) => {
+                const productUrl = getProductUrl(p.product_url);
+                return (
+                  <a
+                    key={p.id}
+                    href={productUrl ?? undefined}
+                    aria-label={`View ${p.title}${productUrl ? " product page" : ""}`}
+                    className={`group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md ${
+                      productUrl ? "cursor-pointer" : "cursor-default"
+                    }`}
+                  >
+                    <div className="aspect-square overflow-hidden bg-muted">
+                      <ProductImage src={p.image_url} title={p.title} />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="mt-0.5 line-clamp-1 font-display font-bold text-foreground">
+                        {p.title}
+                      </h3>
+                      <p className="mt-1 font-semibold text-primary">{formatEGP(p.price_egp)}</p>
+                      {(p.colors ?? []).length > 0 && (
+                        <div className="mt-2 flex flex-wrap items-center gap-1">
+                          {(p.colors ?? []).map((c) => (
+                            <span
+                              key={c}
+                              title={c}
+                              className="h-3 w-3 rounded-full border border-border"
+                              style={{ backgroundColor: COLOR_SWATCHES[c.toLowerCase()] ?? "#ccc" }}
+                            />
+                          ))}
+                        </div>
+                      )}
                       {(p.sizes ?? []).length > 0 && (
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          EU {(p.sizes ?? [])[0]}–{(p.sizes ?? [])[(p.sizes ?? []).length - 1]}
-                        </span>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Sizes: {(p.sizes ?? []).join(", ")}
+                        </p>
+                      )}
+                      {productUrl && (
+                        <p className="mt-3 text-sm font-semibold text-primary">View product →</p>
                       )}
                     </div>
-                  </div>
-                </a>
-              ))}
+                  </a>
+                );
+              })}
             </div>
           )}
         </section>

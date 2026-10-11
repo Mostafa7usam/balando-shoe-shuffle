@@ -22,3 +22,11 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Supabase setup
+
+The app connects to the Supabase project configured in `.env`. To use a different project, update `SUPABASE_PROJECT_ID`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and their `VITE_` counterparts, and update `project_id` in `supabase/config.toml`.
+
+For a fresh database, run [`drizzle/migrations/0000_create_scraper_products.sql`](drizzle/migrations/0000_create_scraper_products.sql) in the Supabase SQL Editor. This creates the publicly readable `scraper_products` table and inserts sample products.
+
+If server-side admin operations are added, set `SUPABASE_SERVICE_ROLE_KEY` in a private local environment file or deployment secret. Never commit the service-role key.
