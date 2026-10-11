@@ -1,14 +1,16 @@
-# Welcome to your Lovable project
+# Balando Shoe Shuffle
+
+Create a new project with Supabase enabled. Call it balando. It should be your one stop shop for finding your perfect shoes in egypt. Basically it's a filter for size, color multi select, price range, and search term. after applying the filter it shows the results randomized not in a specific order. Make it clean, simple and easy to use. The table with the products is called scraper_products on supabase.
 
 This project was built with [Lovable](https://lovable.dev).
 
 ## Build with Lovable
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/4a6e8745-5777-4877-aea3-981a98e2b97f).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
@@ -20,10 +22,3 @@ cd <repository-name>
 npm i
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
