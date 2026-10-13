@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Shuffle, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -119,7 +119,6 @@ function Index() {
   const [colors, setColors] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [shuffleKey, setShuffleKey] = useState(0);
 
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ["scraper_products"],
@@ -162,8 +161,7 @@ function Index() {
       return true;
     });
     return shuffle(filtered);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [products, search, size, colors, minPrice, maxPrice, shuffleKey]);
+  }, [products, search, size, colors, minPrice, maxPrice]);
 
   const hasFilters =
     search.trim() !== "" || size !== null || colors.length > 0 || minPrice !== "" || maxPrice !== "";
@@ -192,13 +190,6 @@ function Index() {
               Your one stop shop for the perfect shoes in Egypt
             </p>
           </div>
-          <button
-            onClick={() => setShuffleKey((k) => k + 1)}
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent"
-          >
-            <Shuffle className="h-4 w-4" />
-            Shuffle
-          </button>
         </div>
       </header>
 
