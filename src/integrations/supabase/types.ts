@@ -19,6 +19,7 @@ export type Database = {
           colors: string[] | null
           category: string | null
           created_at: string | null
+          footwear: boolean | null
           id: number
           price: number
           product_url: string | null
@@ -32,6 +33,7 @@ export type Database = {
           colors?: string[] | null
           category?: string | null
           created_at?: string | null
+          footwear?: boolean | null
           id?: number
           price: number
           product_url?: string | null
@@ -45,6 +47,7 @@ export type Database = {
           colors?: string[] | null
           category?: string | null
           created_at?: string | null
+          footwear?: boolean | null
           id?: number
           price?: number
           product_url?: string | null
