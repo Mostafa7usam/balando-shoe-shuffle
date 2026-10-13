@@ -125,13 +125,13 @@ function Index() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("scraper_products")
-        .select("id, title, brand, price_egp, image_url, product_url, sizes, colors");
+        .select("id, product_title, price, product_image_src, product_url, sizes, colors");
       if (error) throw error;
       return data.map((product) => ({
         id: product.id,
-        title: product.brand ? `${product.brand} ${product.title}` : product.title,
-        price_egp: Number(product.price_egp),
-        image_url: product.image_url,
+        title: product.product_title,
+        price_egp: Number(product.price),
+        image_url: product.product_image_src,
         product_url: product.product_url,
         sizes: product.sizes,
         colors: product.colors,
