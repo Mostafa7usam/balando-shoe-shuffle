@@ -16,46 +16,37 @@ export type Database = {
     Tables: {
       scraper_products: {
         Row: {
+          brand: string | null
           colors: string[] | null
-          category: string | null
           created_at: string | null
-          footwear: boolean | null
-          id: number
-          price: number
+          id: string
+          image_url: string | null
+          price_egp: number
           product_url: string | null
-          product_description: string | null
-          product_image_src: string | null
-          product_title: string
-          scraper_result_id: number
           sizes: string[] | null
+          title: string
         }
         Insert: {
+          brand?: string | null
           colors?: string[] | null
-          category?: string | null
           created_at?: string | null
-          footwear?: boolean | null
-          id?: number
-          price: number
+          id?: string
+          image_url?: string | null
+          price_egp: number
           product_url?: string | null
-          product_description?: string | null
-          product_image_src?: string | null
-          product_title: string
-          scraper_result_id: number
           sizes?: string[] | null
+          title: string
         }
         Update: {
+          brand?: string | null
           colors?: string[] | null
-          category?: string | null
           created_at?: string | null
-          footwear?: boolean | null
-          id?: number
-          price?: number
+          id?: string
+          image_url?: string | null
+          price_egp?: number
           product_url?: string | null
-          product_description?: string | null
-          product_image_src?: string | null
-          product_title?: string
-          scraper_result_id?: number
           sizes?: string[] | null
+          title?: string
         }
         Relationships: []
       }
