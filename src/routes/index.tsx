@@ -123,12 +123,22 @@ function Index() {
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ["scraper_products"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      type Row = {
+        id: number;
+        product_title: string;
+        price: number | string;
+        product_image_src: string | null;
+        product_url: string | null;
+        sizes: string[] | null;
+        colors: string[] | null;
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from("scraper_products")
         .select("id, product_title, price, product_image_src, product_url, sizes, colors")
         .eq("footwear", true);
       if (error) throw error;
-      return data.map((product) => ({
+      return ((data ?? []) as Row[]).map((product): Product => ({
         id: product.id,
         title: product.product_title,
         price_egp: Number(product.price),
