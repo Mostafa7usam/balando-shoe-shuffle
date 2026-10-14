@@ -31,6 +31,7 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
+  staticData: { sitemap: true },
   component: Index,
 });
 
