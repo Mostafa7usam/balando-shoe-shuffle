@@ -3,6 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, X } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -63,6 +72,7 @@ const COLOR_SWATCHES: Record<string, string> = {
 };
 
 const SIZES = ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48"];
+const PAGE_SIZE = 30;
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -120,8 +130,13 @@ function Index() {
   const [colors, setColors] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [page, setPage] = useState(1);
 
-  const { data: products = [], isLoading, error } = useQuery({
+  const {
+    data: products = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["scraper_products"],
     queryFn: async () => {
       type Row = {
@@ -176,7 +191,23 @@ function Index() {
   }, [products, search, size, colors, minPrice, maxPrice]);
 
   const hasFilters =
-    search.trim() !== "" || size !== null || colors.length > 0 || minPrice !== "" || maxPrice !== "";
+    search.trim() !== "" ||
+    size !== null ||
+    colors.length > 0 ||
+    minPrice !== "" ||
+    maxPrice !== "";
+  const pageCount = Math.ceil(results.length / PAGE_SIZE);
+  const paginatedResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const paginationItems: (number | "ellipsis")[] = [];
+  const visiblePages = [...new Set([1, page - 1, page, page + 1, pageCount])]
+    .filter((pageNumber) => pageNumber >= 1 && pageNumber <= pageCount)
+    .sort((a, b) => a - b);
+  visiblePages.forEach((pageNumber, index) => {
+    if (index > 0 && pageNumber - visiblePages[index - 1]! > 1) {
+      paginationItems.push("ellipsis");
+    }
+    paginationItems.push(pageNumber);
+  });
 
   const clearAll = () => {
     setSearch("");
@@ -184,10 +215,13 @@ function Index() {
     setColors([]);
     setMinPrice("");
     setMaxPrice("");
+    setPage(1);
   };
 
-  const toggleColor = (c: string) =>
+  const toggleColor = (c: string) => {
     setColors((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+    setPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -218,7 +252,10 @@ function Index() {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
                   placeholder="Search by product name…"
                   className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
@@ -233,7 +270,10 @@ function Index() {
               <div className="flex items-center gap-2">
                 <input
                   value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value.replace(/\D/g, ""))}
+                  onChange={(e) => {
+                    setMinPrice(e.target.value.replace(/\D/g, ""));
+                    setPage(1);
+                  }}
                   placeholder="Min"
                   inputMode="numeric"
                   className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -241,7 +281,10 @@ function Index() {
                 <span className="text-muted-foreground">–</span>
                 <input
                   value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value.replace(/\D/g, ""))}
+                  onChange={(e) => {
+                    setMaxPrice(e.target.value.replace(/\D/g, ""));
+                    setPage(1);
+                  }}
                   placeholder="Max"
                   inputMode="numeric"
                   className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -258,7 +301,10 @@ function Index() {
                 {SIZES.map((s) => (
                   <button
                     key={s}
-                    onClick={() => setSize(size === s ? null : s)}
+                    onClick={() => {
+                      setSize(size === s ? null : s);
+                      setPage(1);
+                    }}
                     className={`h-9 w-9 rounded-lg border text-sm font-medium transition-colors ${
                       size === s
                         ? "border-primary bg-primary text-primary-foreground"
@@ -333,9 +379,7 @@ function Index() {
             </div>
           ) : error ? (
             <div className="rounded-2xl border border-destructive/30 bg-card py-12 text-center">
-              <p className="font-display text-xl font-bold text-foreground">
-                Couldn’t load shoes
-              </p>
+              <p className="font-display text-xl font-bold text-foreground">Couldn’t load shoes</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Check the Supabase connection and try again.
               </p>
@@ -357,7 +401,7 @@ function Index() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {results.map((p) => {
+              {paginatedResults.map((p) => {
                 const productUrl = getProductUrl(p.product_url);
                 return (
                   <a
@@ -400,6 +444,65 @@ function Index() {
                   </a>
                 );
               })}
+            </div>
+          )}
+          {!isLoading && !error && pageCount > 1 && (
+            <div className="mt-8 flex flex-col items-center gap-4">
+              <p className="text-sm text-muted-foreground">
+                Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, results.length)} of{" "}
+                {results.length} shoes
+              </p>
+              <Pagination className="max-w-full">
+                <PaginationContent className="flex-wrap justify-center gap-0.5 sm:gap-1">
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      aria-disabled={page === 1}
+                      className={`h-9 w-9 px-0 sm:h-10 sm:w-auto sm:px-2.5 [&>span]:hidden sm:[&>span]:inline ${
+                        page === 1 ? "pointer-events-none opacity-50" : ""
+                      }`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setPage((current) => Math.max(1, current - 1));
+                      }}
+                    />
+                  </PaginationItem>
+                  {paginationItems.map((item, index) =>
+                    item === "ellipsis" ? (
+                      <PaginationItem key={`ellipsis-${index}`}>
+                        <PaginationEllipsis className="h-9 w-7 sm:w-9" />
+                      </PaginationItem>
+                    ) : (
+                      <PaginationItem key={item}>
+                        <PaginationLink
+                          href="#"
+                          isActive={item === page}
+                          aria-label={`Go to page ${item}`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            setPage(item);
+                          }}
+                        >
+                          {item}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ),
+                  )}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      aria-disabled={page === pageCount}
+                      className={`h-9 w-9 px-0 sm:h-10 sm:w-auto sm:px-2.5 [&>span]:hidden sm:[&>span]:inline ${
+                        page === pageCount ? "pointer-events-none opacity-50" : ""
+                      }`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setPage((current) => Math.min(pageCount, current + 1));
+                      }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
           )}
         </section>
