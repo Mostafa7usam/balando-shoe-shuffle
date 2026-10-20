@@ -1,6 +1,6 @@
-# Balando Shoe Shuffle
+# Waggado Shoe Shuffle
 
-Create a new project with Supabase enabled. Call it balando. It should be your one stop shop for finding your perfect shoes in egypt. Basically it's a filter for size, color multi select, price range, and search term. after applying the filter it shows the results randomized not in a specific order. Make it clean, simple and easy to use. The table with the products is called scraper_products on supabase.
+Create a new project with Supabase enabled. Call it waggado. It should be your one stop shop for finding your perfect shoes in egypt. Basically it's a filter for size, color multi select, price range, and search term. after applying the filter it shows the results randomized not in a specific order. Make it clean, simple and easy to use. The table with the products is called scraper_products on supabase.
 
 This project was built with [Lovable](https://lovable.dev).
 
