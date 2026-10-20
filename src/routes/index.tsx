@@ -16,13 +16,13 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "balando — Find your perfect shoes in Egypt" },
+      { title: "waggado — Find your perfect shoes in Egypt" },
       {
         name: "description",
         content:
-          "balando is your one stop shop for finding the perfect shoes in Egypt. Filter by size, color, price and search across top brands.",
+          "waggado is your one stop shop for finding the perfect shoes in Egypt. Filter by size, color, price and search across top brands.",
       },
-      { property: "og:title", content: "balando — Find your perfect shoes in Egypt" },
+      { property: "og:title", content: "waggado — Find your perfect shoes in Egypt" },
       {
         property: "og:description",
         content:
@@ -230,7 +230,7 @@ function Index() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
           <div>
             <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">
-              balando
+              waggado
             </h1>
             <p className="text-sm text-muted-foreground">
               Your one stop shop for the perfect shoes in Egypt
@@ -510,7 +510,7 @@ function Index() {
 
       <footer className="mt-12 border-t border-border bg-card">
         <div className="mx-auto max-w-6xl px-4 py-6 text-center text-sm text-muted-foreground">
-          balando — find your perfect fit, Egypt 🇪🇬
+          waggado — find your perfect fit, Egypt 🇪🇬
         </div>
       </footer>
     </div>
