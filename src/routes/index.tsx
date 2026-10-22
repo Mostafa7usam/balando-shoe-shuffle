@@ -172,6 +172,7 @@ function Index() {
       if (maxPrice) query = query.lte("price", Number(maxPrice));
 
       const { data, count, error } = await query
+        .order("product_title", { ascending: true })
         .order("id", { ascending: true })
         .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
       if (error) throw error;
