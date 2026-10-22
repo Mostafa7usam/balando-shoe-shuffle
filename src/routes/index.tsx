@@ -412,6 +412,8 @@ function Index() {
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {paginatedResults.map((p) => {
                 const productUrl = getProductUrl(p.product_url);
+                const displayName = p.display_name?.trim() || null;
+                const profilePicUrl = p.profile_pic_url?.trim() || null;
                 return (
                   <a
                     key={p.id}
@@ -429,22 +431,6 @@ function Index() {
                         {p.title}
                       </h3>
                       <p className="mt-1 font-semibold text-primary">{formatEGP(p.price_egp)}</p>
-                      {(p.display_name || p.profile_pic_url) && (
-                        <div className="mt-3 flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={p.profile_pic_url ?? undefined}
-                              alt={p.display_name ?? "Business"}
-                            />
-                            <AvatarFallback className="text-xs">
-                              {p.display_name?.trim().slice(0, 1).toUpperCase() || "B"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <p className="line-clamp-1 text-sm text-muted-foreground">
-                            {p.display_name ?? "Business"}
-                          </p>
-                        </div>
-                      )}
                       {(p.colors ?? []).length > 0 && (
                         <div className="mt-2 flex flex-wrap items-center gap-1">
                           {(p.colors ?? []).map((c) => (
@@ -464,6 +450,22 @@ function Index() {
                       )}
                       {productUrl && (
                         <p className="mt-3 text-sm font-semibold text-primary">View product →</p>
+                      )}
+                      {(displayName || profilePicUrl) && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage
+                              src={profilePicUrl ?? undefined}
+                              alt={displayName ?? "Business"}
+                            />
+                            <AvatarFallback className="text-xs">
+                              {displayName?.slice(0, 1).toUpperCase() || "B"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <p className="line-clamp-1 text-sm text-muted-foreground">
+                            {displayName ?? "Business"}
+                          </p>
+                        </div>
                       )}
                     </div>
                   </a>
