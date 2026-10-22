@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -77,17 +77,6 @@ const COLOR_SWATCHES: Record<string, string> = {
 const SIZES = ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48"];
 const PAGE_SIZE = 30;
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const tmp = a[i] as T;
-    a[i] = a[j] as T;
-    a[j] = tmp;
-  }
-  return a;
-}
-
 function formatEGP(n: number) {
   return `EGP ${n.toLocaleString("en-EG")}`;
 }
@@ -134,13 +123,27 @@ function Index() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [page, setPage] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(search), 250);
+    return () => clearTimeout(timeout);
+  }, [search]);
 
   const {
-    data: products = [],
+    data: productPage = { products: [], totalCount: 0 },
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["scraper_products"],
+    queryKey: [
+      "scraper_products",
+      page,
+      debouncedSearch.trim(),
+      size,
+      [...colors].sort(),
+      minPrice,
+      maxPrice,
+    ],
     queryFn: async () => {
       type Row = {
         id: number;
@@ -153,51 +156,44 @@ function Index() {
         display_name: string | null;
         profile_pic_url: string | null;
       };
+      const searchTerm = debouncedSearch.trim();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      let query = (supabase as any)
         .from("scraper_products")
         .select(
           "id, product_title, price, product_image_src, product_url, sizes, colors, display_name, profile_pic_url",
+          { count: "exact" },
         )
         .eq("footwear", true);
+      if (searchTerm) query = query.ilike("product_title", `%${searchTerm}%`);
+      if (size) query = query.contains("sizes", [size]);
+      if (colors.length > 0) query = query.overlaps("colors", colors);
+      if (minPrice) query = query.gte("price", Number(minPrice));
+      if (maxPrice) query = query.lte("price", Number(maxPrice));
+
+      const { data, count, error } = await query
+        .order("id", { ascending: true })
+        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
       if (error) throw error;
-      return ((data ?? []) as Row[]).map((product): Product => ({
-        id: product.id,
-        title: product.product_title,
-        price_egp: Number(product.price),
-        image_url: product.product_image_src,
-        product_url: product.product_url,
-        sizes: product.sizes,
-        colors: product.colors,
-        display_name: product.display_name,
-        profile_pic_url: product.profile_pic_url,
-      }));
+      return {
+        products: ((data ?? []) as Row[]).map((product): Product => ({
+          id: product.id,
+          title: product.product_title,
+          price_egp: Number(product.price),
+          image_url: product.product_image_src,
+          product_url: product.product_url,
+          sizes: product.sizes,
+          colors: product.colors,
+          display_name: product.display_name,
+          profile_pic_url: product.profile_pic_url,
+        })),
+        totalCount: count ?? 0,
+      };
     },
   });
 
-  const availableColors = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach((p) => p.colors?.forEach((c) => set.add(c.toLowerCase())));
-    return [...set].sort();
-  }, [products]);
-
-  const results = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const min = minPrice ? Number(minPrice) : null;
-    const max = maxPrice ? Number(maxPrice) : null;
-    const filtered = products.filter((p) => {
-      if (q && !p.title.toLowerCase().includes(q)) return false;
-      if (size && !(p.sizes ?? []).includes(size)) return false;
-      if (colors.length > 0) {
-        const pc = (p.colors ?? []).map((c) => c.toLowerCase());
-        if (!colors.some((c) => pc.includes(c))) return false;
-      }
-      if (min !== null && p.price_egp < min) return false;
-      if (max !== null && p.price_egp > max) return false;
-      return true;
-    });
-    return shuffle(filtered);
-  }, [products, search, size, colors, minPrice, maxPrice]);
+  const products = productPage.products;
+  const availableColors = Object.keys(COLOR_SWATCHES);
 
   const hasFilters =
     search.trim() !== "" ||
@@ -205,8 +201,7 @@ function Index() {
     colors.length > 0 ||
     minPrice !== "" ||
     maxPrice !== "";
-  const pageCount = Math.ceil(results.length / PAGE_SIZE);
-  const paginatedResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageCount = Math.ceil(productPage.totalCount / PAGE_SIZE);
   const paginationItems: (number | "ellipsis")[] = [];
   const visiblePages = [...new Set([1, page - 1, page, page + 1, pageCount])]
     .filter((pageNumber) => pageNumber >= 1 && pageNumber <= pageCount)
@@ -359,7 +354,7 @@ function Index() {
           {hasFilters && (
             <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
               <p className="text-sm text-muted-foreground">
-                {results.length} {results.length === 1 ? "shoe" : "shoes"} found
+                {productPage.totalCount} {productPage.totalCount === 1 ? "shoe" : "shoes"} found
               </p>
               <button
                 onClick={clearAll}
@@ -393,7 +388,7 @@ function Index() {
                 Check the Supabase connection and try again.
               </p>
             </div>
-          ) : results.length === 0 ? (
+          ) : productPage.totalCount === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-card py-20 text-center">
               <p className="font-display text-xl font-bold text-foreground">No shoes match</p>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -410,7 +405,7 @@ function Index() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {paginatedResults.map((p) => {
+              {products.map((p) => {
                 const productUrl = getProductUrl(p.product_url);
                 const displayName = p.display_name?.trim() || null;
                 const profilePicUrl = p.profile_pic_url?.trim() || null;
@@ -476,8 +471,9 @@ function Index() {
           {!isLoading && !error && pageCount > 1 && (
             <div className="mt-8 flex flex-col items-center gap-4">
               <p className="text-sm text-muted-foreground">
-                Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, results.length)} of{" "}
-                {results.length} shoes
+                Showing {(page - 1) * PAGE_SIZE + 1}–
+                {Math.min(page * PAGE_SIZE, productPage.totalCount)} of {productPage.totalCount}{" "}
+                shoes
               </p>
               <Pagination className="max-w-full">
                 <PaginationContent className="flex-wrap justify-center gap-0.5 sm:gap-1">
