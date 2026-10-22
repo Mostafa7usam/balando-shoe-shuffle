@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, X } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Pagination,
   PaginationContent,
@@ -52,6 +53,8 @@ type Product = {
   product_url: string | null;
   sizes: string[] | null;
   colors: string[] | null;
+  display_name: string | null;
+  profile_pic_url: string | null;
 };
 
 const COLOR_SWATCHES: Record<string, string> = {
@@ -147,11 +150,15 @@ function Index() {
         product_url: string | null;
         sizes: string[] | null;
         colors: string[] | null;
+        display_name: string | null;
+        profile_pic_url: string | null;
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from("scraper_products")
-        .select("id, product_title, price, product_image_src, product_url, sizes, colors")
+        .select(
+          "id, product_title, price, product_image_src, product_url, sizes, colors, display_name, profile_pic_url",
+        )
         .eq("footwear", true);
       if (error) throw error;
       return ((data ?? []) as Row[]).map((product): Product => ({
@@ -162,6 +169,8 @@ function Index() {
         product_url: product.product_url,
         sizes: product.sizes,
         colors: product.colors,
+        display_name: product.display_name,
+        profile_pic_url: product.profile_pic_url,
       }));
     },
   });
@@ -420,6 +429,22 @@ function Index() {
                         {p.title}
                       </h3>
                       <p className="mt-1 font-semibold text-primary">{formatEGP(p.price_egp)}</p>
+                      {(p.display_name || p.profile_pic_url) && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage
+                              src={p.profile_pic_url ?? undefined}
+                              alt={p.display_name ?? "Business"}
+                            />
+                            <AvatarFallback className="text-xs">
+                              {p.display_name?.trim().slice(0, 1).toUpperCase() || "B"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <p className="line-clamp-1 text-sm text-muted-foreground">
+                            {p.display_name ?? "Business"}
+                          </p>
+                        </div>
+                      )}
                       {(p.colors ?? []).length > 0 && (
                         <div className="mt-2 flex flex-wrap items-center gap-1">
                           {(p.colors ?? []).map((c) => (
