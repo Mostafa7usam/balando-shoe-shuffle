@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -394,7 +394,7 @@ function Index() {
             <div className="rounded-2xl border border-destructive/30 bg-card py-12 text-center">
               <p className="font-display text-xl font-bold text-foreground">Couldn’t load shoes</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Check the Supabase connection and try again.
+                Please refresh and try again.
               </p>
             </div>
           ) : productPage.totalCount === 0 ? (
