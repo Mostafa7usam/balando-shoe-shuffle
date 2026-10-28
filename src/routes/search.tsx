@@ -417,8 +417,7 @@ function Index() {
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {products.map((p) => {
                 const productUrl = getProductUrl(p.product_url);
-                const displayName = p.display_name?.trim() || null;
-                const profilePicUrl = p.profile_pic_url?.trim() || null;
+                const brand = p.brand?.trim() || null;
                 return (
                   <a
                     key={p.id}
@@ -456,20 +455,12 @@ function Index() {
                       {productUrl && (
                         <p className="mt-3 text-sm font-semibold text-primary">View product →</p>
                       )}
-                      {(displayName || profilePicUrl) && (
+                      {brand && (
                         <div className="mt-3 flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={profilePicUrl ?? undefined}
-                              alt={displayName ?? "Business"}
-                            />
-                            <AvatarFallback className="text-xs">
-                              {displayName?.slice(0, 1).toUpperCase() || "B"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <p className="line-clamp-1 text-sm text-muted-foreground">
-                            {displayName ?? "Business"}
-                          </p>
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-bold text-primary">
+                            {brand.slice(0, 1).toUpperCase()}
+                          </span>
+                          <p className="line-clamp-1 text-sm text-muted-foreground">{brand}</p>
                         </div>
                       )}
                     </div>
