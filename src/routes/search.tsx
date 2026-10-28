@@ -17,22 +17,27 @@ import {
 export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
-      { title: "waggado — Find your perfect shoes in Egypt" },
+      { title: "Search All Shoes in Egypt — waggado" },
       {
         name: "description",
         content:
-          "waggado is your one stop shop for finding the perfect shoes in Egypt. Filter by size, color, price and search across top brands.",
+          "Search and filter sneakers, sandals, boots, clogs and more from footwear stores across Egypt. Filter by size, color, price and brand on waggado.",
       },
-      { property: "og:title", content: "waggado — Find your perfect shoes in Egypt" },
+      {
+        property: "og:title",
+        content: "Search All Shoes in Egypt — waggado",
+      },
       {
         property: "og:description",
         content:
-          "Filter shoes by size, color, price and search term. Your one stop shoe shop for Egypt.",
+          "Filter shoes by size, color, price and search term. One place to find every footwear store in Egypt.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://balando.lovable.app/search" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "canonical", href: "https://balando.lovable.app/search" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
