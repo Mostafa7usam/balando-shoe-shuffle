@@ -1,38 +1,47 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Search, X } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+  ArrowRight,
+  BadgeCheck,
+  Search,
+  SlidersHorizontal,
+  Store,
+  Tag,
+  TrendingUp,
+} from "lucide-react";
+
+import heroImg from "@/assets/hero-footwear.jpg";
+import sneakersImg from "@/assets/cat-sneakers.jpg";
+import sandalsImg from "@/assets/cat-sandals.jpg";
+import bootsImg from "@/assets/cat-boots.jpg";
+import clogsImg from "@/assets/cat-clogs.jpg";
+import heelsImg from "@/assets/cat-heels.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "waggado — Find your perfect shoes in Egypt" },
+      {
+        title: "waggado — Egypt's Ultimate Footwear Finder",
+      },
       {
         name: "description",
         content:
-          "waggado is your one stop shop for finding the perfect shoes in Egypt. Filter by size, color, price and search across top brands.",
+          "waggado gathers every footwear business in Egypt in one place. Search sneakers, sandals, boots, clogs, flip flops and leather shoes by size, color and price — best fit, best price, best provider.",
       },
-      { property: "og:title", content: "waggado — Find your perfect shoes in Egypt" },
+      {
+        property: "og:title",
+        content: "waggado — Egypt's Ultimate Footwear Finder",
+      },
       {
         property: "og:description",
         content:
-          "Filter shoes by size, color, price and search term. Your one stop shoe shop for Egypt.",
+          "Stop doom-scrolling ads. Find sneakers, sandals, شبشب, boots, clogs and more from footwear stores across Egypt — filtered by size, color and price.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://balando.lovable.app/" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "canonical", href: "https://balando.lovable.app/" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -40,501 +49,359 @@ export const Route = createFileRoute("/")({
         href: "https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Outfit:wght@400;500;600;700&display=swap",
       },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "waggado",
+          alternateName: "balando",
+          url: "https://balando.lovable.app/",
+          description:
+            "Egypt's ultimate footwear finder — one place to search every footwear store in Egypt.",
+          potentialAction: {
+            "@type": "SearchAction",
+            target: "https://balando.lovable.app/search?q={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+        }),
+      },
+    ],
   }),
   staticData: { sitemap: true },
-  component: Index,
+  component: Landing,
 });
 
-type Product = {
-  id: number;
+const TRENDING: { label: string; query: string }[] = [
+  { label: "adidas Egypt", query: "adidas" },
+  { label: "Nike sneakers", query: "nike" },
+  { label: "Running shoes", query: "running" },
+  { label: "Clogs", query: "clogs" },
+  { label: "شبشب نايك", query: "flip" },
+  { label: "Loafers", query: "loafers" },
+  { label: "Puma", query: "puma" },
+  { label: "Skechers", query: "skechers" },
+  { label: "Crocs", query: "crocs" },
+  { label: "كوتشي اديداس", query: "adidas" },
+];
+
+const CATEGORIES: {
   title: string;
-  price_egp: number;
-  image_url: string | null;
-  product_url: string | null;
-  sizes: string[] | null;
-  colors: string[] | null;
-  display_name: string | null;
-  profile_pic_url: string | null;
-};
+  blurb: string;
+  image: string;
+  query: string;
+}[] = [
+  {
+    title: "Sneakers & كوتشي",
+    blurb: "From running shoes to campus classics — every drop, every store.",
+    image: sneakersImg,
+    query: "sneakers",
+  },
+  {
+    title: "Sandals & Flip Flops",
+    blurb: "شبشب season all year. Leather straps, slides and havaianas-style classics.",
+    image: sandalsImg,
+    query: "sandals",
+  },
+  {
+    title: "Boots & Leather",
+    blurb: "Work boots, chelsea boots and polished leather that lasts.",
+    image: bootsImg,
+    query: "boots",
+  },
+  {
+    title: "Clogs & Slides",
+    blurb: "Egypt's fastest-growing trend — clogs for men and women.",
+    image: clogsImg,
+    query: "clogs",
+  },
+  {
+    title: "Heels & Ballerinas",
+    blurb: "Kitten heels, wedges and flats for every occasion.",
+    image: heelsImg,
+    query: "heels",
+  },
+];
 
-const COLOR_SWATCHES: Record<string, string> = {
-  black: "#1a1a1a",
-  white: "#f5f5f5",
-  red: "#d43a2f",
-  blue: "#2f5fd4",
-  grey: "#9a9a9a",
-  green: "#3d7a4a",
-  navy: "#24355e",
-  orange: "#e8792b",
-  pink: "#e8a0bf",
-  silver: "#c8c8cc",
-  brown: "#7a5230",
-  beige: "#d9c9a8",
-  yellow: "#e8c53a",
-  purple: "#7a4a9e",
-};
-
-const SIZES = ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48"];
-const PAGE_SIZE = 30;
-
-function formatEGP(n: number) {
-  return `EGP ${n.toLocaleString("en-EG")}`;
-}
-
-function getProductUrl(value: string | null) {
-  if (!value) return null;
-
-  try {
-    const url = new URL(value);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-    if (url.protocol === "http:") url.protocol = "https:";
-    return url.href;
-  } catch {
-    return null;
-  }
-}
-
-function ProductImage({ src, title }: { src: string | null; title: string }) {
-  const [hasError, setHasError] = useState(false);
-
-  if (!src || hasError) {
-    return (
-      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        Image unavailable
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={title}
-      loading="lazy"
-      onError={() => setHasError(true)}
-      className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
-    />
-  );
-}
-
-function Index() {
-  const [search, setSearch] = useState("");
-  const [size, setSize] = useState<string | null>(null);
-  const [colors, setColors] = useState<string[]>([]);
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [page, setPage] = useState(1);
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedSearch(search), 250);
-    return () => clearTimeout(timeout);
-  }, [search]);
-
-  const {
-    data: productPage = { products: [], totalCount: 0 },
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: [
-      "scraper_products",
-      page,
-      debouncedSearch.trim(),
-      size,
-      [...colors].sort(),
-      minPrice,
-      maxPrice,
-    ],
-    queryFn: async () => {
-      type Row = {
-        id: number;
-        product_title: string;
-        price: number | string;
-        product_image_src: string | null;
-        product_url: string | null;
-        sizes: string[] | null;
-        colors: string[] | null;
-        display_name: string | null;
-        profile_pic_url: string | null;
-      };
-      const searchTerm = debouncedSearch.trim();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = (supabase as any)
-        .from("scraper_products")
-        .select(
-          "id, product_title, price, product_image_src, product_url, sizes, colors, display_name, profile_pic_url",
-          { count: "exact" },
-        )
-        .eq("footwear", true);
-      if (searchTerm) query = query.ilike("product_title", `%${searchTerm}%`);
-      if (size) query = query.contains("sizes", [size]);
-      if (colors.length > 0) query = query.overlaps("colors", colors);
-      if (minPrice) query = query.gte("price", Number(minPrice));
-      if (maxPrice) query = query.lte("price", Number(maxPrice));
-
-      const { data, count, error } = await query
-        .order("product_title", { ascending: true })
-        .order("id", { ascending: true })
-        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-      if (error) throw error;
-      return {
-        products: ((data ?? []) as Row[]).map((product): Product => ({
-          id: product.id,
-          title: product.product_title,
-          price_egp: Number(product.price),
-          image_url: product.product_image_src,
-          product_url: product.product_url,
-          sizes: product.sizes,
-          colors: product.colors,
-          display_name: product.display_name,
-          profile_pic_url: product.profile_pic_url,
-        })),
-        totalCount: count ?? 0,
-      };
-    },
-  });
-
-  const products = productPage.products;
-  const availableColors = Object.keys(COLOR_SWATCHES);
-
-  const hasFilters =
-    search.trim() !== "" ||
-    size !== null ||
-    colors.length > 0 ||
-    minPrice !== "" ||
-    maxPrice !== "";
-  const pageCount = Math.ceil(productPage.totalCount / PAGE_SIZE);
-  const paginationItems: (number | "ellipsis")[] = [];
-  const visiblePages = [...new Set([1, page - 1, page, page + 1, pageCount])]
-    .filter((pageNumber) => pageNumber >= 1 && pageNumber <= pageCount)
-    .sort((a, b) => a - b);
-  visiblePages.forEach((pageNumber, index) => {
-    if (index > 0 && pageNumber - visiblePages[index - 1]! > 1) {
-      paginationItems.push("ellipsis");
-    }
-    paginationItems.push(pageNumber);
-  });
-
-  const clearAll = () => {
-    setSearch("");
-    setSize(null);
-    setColors([]);
-    setMinPrice("");
-    setMaxPrice("");
-    setPage(1);
-  };
-
-  const toggleColor = (c: string) => {
-    setColors((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
-    setPage(1);
-  };
-
+function Landing() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
+      <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">
+            <p className="font-display text-2xl font-extrabold tracking-tight text-foreground">
               waggado
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Your one stop shop for the perfect shoes in Egypt
+            </p>
+            <p className="text-xs text-muted-foreground">
+              from wagad · واجد · <span className="italic">find</span>
             </p>
           </div>
+          <Link
+            to="/search"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:px-5"
+          >
+            <Search className="h-4 w-4" />
+            Browse all shoes
+          </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        {/* Filters */}
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-            {/* Search */}
-            <div className="lg:col-span-2">
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Search
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  placeholder="Search by product name…"
-                  className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            </div>
-
-            {/* Price range */}
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Price (EGP)
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  value={minPrice}
-                  onChange={(e) => {
-                    setMinPrice(e.target.value.replace(/\D/g, ""));
-                    setPage(1);
-                  }}
-                  placeholder="Min"
-                  inputMode="numeric"
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-                <span className="text-muted-foreground">–</span>
-                <input
-                  value={maxPrice}
-                  onChange={(e) => {
-                    setMaxPrice(e.target.value.replace(/\D/g, ""));
-                    setPage(1);
-                  }}
-                  placeholder="Max"
-                  inputMode="numeric"
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            </div>
-
-            {/* Size */}
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Size (EU)
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                {SIZES.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => {
-                      setSize(size === s ? null : s);
-                      setPage(1);
-                    }}
-                    className={`h-9 w-9 rounded-lg border text-sm font-medium transition-colors ${
-                      size === s
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-background text-foreground hover:bg-accent"
-                    }`}
+      <main>
+        {/* Hero */}
+        <section className="relative overflow-hidden">
+          <div className="mx-auto max-w-6xl px-4 pb-10 pt-12 sm:pt-16">
+            <div className="grid items-center gap-10 lg:grid-cols-2">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-accent px-3 py-1.5 text-xs font-semibold text-primary">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  Every footwear store in Egypt. One place.
+                </span>
+                <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+                  Stop scrolling ads.
+                  <span className="block text-primary">Start finding shoes.</span>
+                </h1>
+                <p className="mt-5 max-w-xl text-lg text-muted-foreground">
+                  waggado comes from <em>wagad</em> — "find" in Arabic — and that's all
+                  it does: sneakers, sandals, boots, clogs, flip flops and leather
+                  shoes from stores across Egypt, filtered by{" "}
+                  <strong className="text-foreground">size</strong>,{" "}
+                  <strong className="text-foreground">color</strong>,{" "}
+                  <strong className="text-foreground">price</strong> and brand. Best
+                  fit. Best price. Best provider.
+                </p>
+                <div className="mt-7 flex flex-wrap items-center gap-3">
+                  <Link
+                    to="/search"
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 font-display text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-transform hover:scale-[1.03]"
                   >
-                    {s}
-                  </button>
+                    Find your perfect pair
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <a
+                    href="#trending"
+                    className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 font-display text-base font-bold text-foreground transition-colors hover:bg-accent"
+                  >
+                    What Egypt is searching
+                  </a>
+                </div>
+                <p className="mt-5 text-sm text-muted-foreground">
+                  Free to use · No account needed · Real Egyptian stores
+                </p>
+              </div>
+              <div className="relative">
+                <div className="overflow-hidden rounded-3xl border border-border shadow-2xl shadow-primary/10">
+                  <img
+                    src={heroImg}
+                    alt="A colorful flat-lay of sneakers, boots, sandals, clogs and heels available in Egypt"
+                    width={1600}
+                    height={900}
+                    className="h-full w-full object-cover"
+                    fetchPriority="high"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Trending searches */}
+        <section id="trending" className="border-y border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-8">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+              <h2 className="flex shrink-0 items-center gap-2 font-display text-sm font-bold uppercase tracking-wide text-foreground">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                Trending in Egypt
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {TRENDING.map((t) => (
+                  <Link
+                    key={t.label}
+                    to="/search"
+                    search={{ q: t.query }}
+                    className="rounded-full border border-input bg-background px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-accent"
+                  >
+                    {t.label}
+                  </Link>
                 ))}
               </div>
             </div>
           </div>
-
-          {/* Colors */}
-          <div className="mt-5">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Colors
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {availableColors.map((c) => {
-                const active = colors.includes(c);
-                return (
-                  <button
-                    key={c}
-                    onClick={() => toggleColor(c)}
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
-                      active
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-background text-foreground hover:bg-accent"
-                    }`}
-                  >
-                    <span
-                      className="h-3.5 w-3.5 rounded-full border border-border"
-                      style={{ backgroundColor: COLOR_SWATCHES[c] ?? "#ccc" }}
-                    />
-                    {c}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {hasFilters && (
-            <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
-              <p className="text-sm text-muted-foreground">
-                {productPage.totalCount} {productPage.totalCount === 1 ? "shoe" : "shoes"} found
-              </p>
-              <button
-                onClick={clearAll}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-              >
-                <X className="h-4 w-4" />
-                Clear all filters
-              </button>
-            </div>
-          )}
         </section>
 
-        {/* Results */}
-        <section className="mt-8">
-          {isLoading ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="animate-pulse rounded-2xl border border-border bg-card">
-                  <div className="aspect-square rounded-t-2xl bg-muted" />
-                  <div className="space-y-2 p-4">
-                    <div className="h-4 w-3/4 rounded bg-muted" />
-                    <div className="h-3 w-1/2 rounded bg-muted" />
+        {/* Categories */}
+        <section className="mx-auto max-w-6xl px-4 py-16">
+          <div className="max-w-2xl">
+            <h2 className="font-display text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+              Every style, one search away
+            </h2>
+            <p className="mt-3 text-lg text-muted-foreground">
+              However you say it — كوتشي, شبشب, clogs, boots — waggado speaks your
+              language. Tap a style and filter your way.
+            </p>
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {CATEGORIES.map((c) => (
+              <Link
+                key={c.title}
+                to="/search"
+                search={{ q: c.query }}
+                className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-lg"
+              >
+                <div className="aspect-square overflow-hidden">
+                  <img
+                    src={c.image}
+                    alt={c.title}
+                    width={1024}
+                    height={1024}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-display font-bold text-foreground">{c.title}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{c.blurb}</p>
+                  <p className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                    Browse
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+            <Link
+              to="/search"
+              className="group flex items-center justify-between gap-4 rounded-2xl bg-primary px-6 py-5 text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-[1.01] lg:col-span-5"
+            >
+              <div>
+                <p className="font-display text-lg font-bold">
+                  Can't see your style? Search everything.
+                </p>
+                <p className="text-sm opacity-80">
+                  Slippers, flip flops, running shoes, clogs for men and women — it's
+                  all in there.
+                </p>
+              </div>
+              <ArrowRight className="h-6 w-6 shrink-0 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+        </section>
+
+        {/* Why waggado */}
+        <section className="border-y border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <div className="max-w-2xl">
+              <h2 className="font-display text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                Shopping ads found you. Now you find them.
+              </h2>
+              <p className="mt-3 text-lg text-muted-foreground">
+                You didn't choose to see that shoe on Instagram — an ad chose you.
+                waggado flips it around.
+              </p>
+            </div>
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  icon: Tag,
+                  title: "Best price",
+                  text: "See the same style across every store and compare prices in EGP before you buy.",
+                },
+                {
+                  icon: SlidersHorizontal,
+                  title: "Best fit",
+                  text: "Filter by your exact EU size, color and budget in seconds — not hours of scrolling.",
+                },
+                {
+                  icon: Store,
+                  title: "Best provider",
+                  text: "Real footwear businesses across Egypt, from big brands to local stores — all in one place.",
+                },
+              ].map((f) => (
+                <div
+                  key={f.title}
+                  className="rounded-2xl border border-border bg-background p-6 shadow-sm"
+                >
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-primary">
+                    <f.icon className="h-5 w-5" />
                   </div>
+                  <h3 className="mt-4 font-display text-lg font-bold text-foreground">
+                    {f.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{f.text}</p>
                 </div>
               ))}
             </div>
-          ) : error ? (
-            <div className="rounded-2xl border border-destructive/30 bg-card py-12 text-center">
-              <p className="font-display text-xl font-bold text-foreground">Couldn’t load shoes</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Check the Supabase connection and try again.
-              </p>
-            </div>
-          ) : productPage.totalCount === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-card py-20 text-center">
-              <p className="font-display text-xl font-bold text-foreground">No shoes match</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Try widening your price range or removing a filter.
-              </p>
-              {hasFilters && (
-                <button
-                  onClick={clearAll}
-                  className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-                >
-                  Clear filters
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {products.map((p) => {
-                const productUrl = getProductUrl(p.product_url);
-                const displayName = p.display_name?.trim() || null;
-                const profilePicUrl = p.profile_pic_url?.trim() || null;
-                return (
-                  <a
-                    key={p.id}
-                    href={productUrl ?? undefined}
-                    aria-label={`View ${p.title}${productUrl ? " product page" : ""}`}
-                    className={`group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md ${
-                      productUrl ? "cursor-pointer" : "cursor-default"
-                    }`}
-                  >
-                    <div className="aspect-square overflow-hidden bg-muted">
-                      <ProductImage src={p.image_url} title={p.title} />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="mt-0.5 line-clamp-1 font-display font-bold text-foreground">
-                        {p.title}
-                      </h3>
-                      <p className="mt-1 font-semibold text-primary">{formatEGP(p.price_egp)}</p>
-                      {(p.colors ?? []).length > 0 && (
-                        <div className="mt-2 flex flex-wrap items-center gap-1">
-                          {(p.colors ?? []).map((c) => (
-                            <span
-                              key={c}
-                              title={c}
-                              className="h-3 w-3 rounded-full border border-border"
-                              style={{ backgroundColor: COLOR_SWATCHES[c.toLowerCase()] ?? "#ccc" }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      {(p.sizes ?? []).length > 0 && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Sizes: {(p.sizes ?? []).join(", ")}
-                        </p>
-                      )}
-                      {productUrl && (
-                        <p className="mt-3 text-sm font-semibold text-primary">View product →</p>
-                      )}
-                      {(displayName || profilePicUrl) && (
-                        <div className="mt-3 flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={profilePicUrl ?? undefined}
-                              alt={displayName ?? "Business"}
-                            />
-                            <AvatarFallback className="text-xs">
-                              {displayName?.slice(0, 1).toUpperCase() || "B"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <p className="line-clamp-1 text-sm text-muted-foreground">
-                            {displayName ?? "Business"}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </a>
-                );
-              })}
-            </div>
-          )}
-          {!isLoading && !error && pageCount > 1 && (
-            <div className="mt-8 flex flex-col items-center gap-4">
-              <p className="text-sm text-muted-foreground">
-                Showing {(page - 1) * PAGE_SIZE + 1}–
-                {Math.min(page * PAGE_SIZE, productPage.totalCount)} of {productPage.totalCount}{" "}
-                shoes
-              </p>
-              <Pagination className="max-w-full">
-                <PaginationContent className="flex-wrap justify-center gap-0.5 sm:gap-1">
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      aria-disabled={page === 1}
-                      className={`h-9 w-9 px-0 sm:h-10 sm:w-auto sm:px-2.5 [&>span]:hidden sm:[&>span]:inline ${
-                        page === 1 ? "pointer-events-none opacity-50" : ""
-                      }`}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setPage((current) => Math.max(1, current - 1));
-                      }}
-                    />
-                  </PaginationItem>
-                  {paginationItems.map((item, index) =>
-                    item === "ellipsis" ? (
-                      <PaginationItem key={`ellipsis-${index}`}>
-                        <PaginationEllipsis className="h-9 w-7 sm:w-9" />
-                      </PaginationItem>
-                    ) : (
-                      <PaginationItem key={item}>
-                        <PaginationLink
-                          href="#"
-                          isActive={item === page}
-                          aria-label={`Go to page ${item}`}
-                          onClick={(event) => {
-                            event.preventDefault();
-                            setPage(item);
-                          }}
-                        >
-                          {item}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ),
-                  )}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      aria-disabled={page === pageCount}
-                      className={`h-9 w-9 px-0 sm:h-10 sm:w-auto sm:px-2.5 [&>span]:hidden sm:[&>span]:inline ${
-                        page === pageCount ? "pointer-events-none opacity-50" : ""
-                      }`}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setPage((current) => Math.min(pageCount, current + 1));
-                      }}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section className="mx-auto max-w-6xl px-4 py-16">
+          <h2 className="font-display text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            Three steps. One perfect pair.
+          </h2>
+          <ol className="mt-8 grid gap-4 md:grid-cols-3">
+            {[
+              {
+                n: "1",
+                title: "Search & filter",
+                text: "Type what you're after — كوتشي اديداس رجالي, clogs, running shoes — then set size, color and price.",
+              },
+              {
+                n: "2",
+                title: "Compare",
+                text: "See prices, sizes, colors and stores side by side, with results in a shuffled order so everyone gets discovered.",
+              },
+              {
+                n: "3",
+                title: "Go to the store",
+                text: "Click through straight to the seller's product page and buy from them — waggado never sits in the middle.",
+              },
+            ].map((s) => (
+              <li
+                key={s.n}
+                className="rounded-2xl border border-border bg-card p-6 shadow-sm"
+              >
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary font-display text-lg font-extrabold text-primary-foreground">
+                  {s.n}
+                </span>
+                <h3 className="mt-4 font-display text-lg font-bold text-foreground">
+                  {s.title}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">{s.text}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {/* CTA */}
+        <section className="mx-auto max-w-6xl px-4 pb-16">
+          <div className="overflow-hidden rounded-3xl bg-primary px-6 py-14 text-center text-primary-foreground shadow-xl shadow-primary/20">
+            <BadgeCheck className="mx-auto h-10 w-10 opacity-80" />
+            <h2 className="mx-auto mt-4 max-w-2xl font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
+              Your perfect pair is already in Egypt. Go find it.
+            </h2>
+            <Link
+              to="/search"
+              className="mt-7 inline-flex items-center gap-2 rounded-full bg-background px-7 py-3.5 font-display text-base font-bold text-primary transition-transform hover:scale-[1.03]"
+            >
+              Start searching
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </section>
       </main>
 
-      <footer className="mt-12 border-t border-border bg-card">
-        <div className="mx-auto max-w-6xl px-4 py-6 text-center text-sm text-muted-foreground">
-          waggado — find your perfect fit, Egypt 🇪🇬
+      <footer className="border-t border-border bg-card">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-center text-sm text-muted-foreground sm:flex-row sm:text-left">
+          <p>
+            <span className="font-display font-extrabold text-foreground">waggado</span>{" "}
+            — find your perfect fit, Egypt 🇪🇬
+          </p>
+          <Link to="/search" className="font-semibold text-primary hover:underline">
+            Search all shoes →
+          </Link>
         </div>
       </footer>
     </div>

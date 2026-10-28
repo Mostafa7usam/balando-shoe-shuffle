@@ -15,6 +15,10 @@ import {
 } from "@/components/ui/pagination";
 
 export const Route = createFileRoute("/search")({
+  validateSearch: (search: Record<string, unknown>): { q?: string } => {
+    if (typeof search.q === "string" && search.q.trim()) return { q: search.q.trim() };
+    return {};
+  },
   head: () => ({
     meta: [
       { title: "Search All Shoes in Egypt — waggado" },
