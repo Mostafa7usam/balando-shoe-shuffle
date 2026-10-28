@@ -126,7 +126,8 @@ function ProductImage({ src, title }: { src: string | null; title: string }) {
 }
 
 function Index() {
-  const [search, setSearch] = useState("");
+  const initialQuery = Route.useSearch().q ?? "";
+  const [search, setSearch] = useState(initialQuery);
   const [size, setSize] = useState<string | null>(null);
   const [colors, setColors] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
