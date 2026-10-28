@@ -351,7 +351,7 @@ function Landing() {
               {
                 n: "2",
                 title: "Compare",
-                text: "See prices, sizes, colors and stores side by side, with results in a shuffled order so everyone gets discovered.",
+                text: "See prices, sizes, colors and stores side by side before you commit.",
               },
               {
                 n: "3",
