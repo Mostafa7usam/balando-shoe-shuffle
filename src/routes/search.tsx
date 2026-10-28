@@ -55,15 +55,14 @@ export const Route = createFileRoute("/search")({
 });
 
 type Product = {
-  id: number;
+  id: string;
   title: string;
+  brand: string | null;
   price_egp: number;
   image_url: string | null;
   product_url: string | null;
   sizes: string[] | null;
   colors: string[] | null;
-  display_name: string | null;
-  profile_pic_url: string | null;
 };
 
 const COLOR_SWATCHES: Record<string, string> = {
@@ -156,47 +155,44 @@ function Index() {
     ],
     queryFn: async () => {
       type Row = {
-        id: number;
-        product_title: string;
-        price: number | string;
-        product_image_src: string | null;
+        id: string;
+        title: string;
+        brand: string | null;
+        price_egp: number | string;
+        image_url: string | null;
         product_url: string | null;
         sizes: string[] | null;
         colors: string[] | null;
-        display_name: string | null;
-        profile_pic_url: string | null;
       };
       const searchTerm = debouncedSearch.trim();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let query = (supabase as any)
         .from("scraper_products")
         .select(
-          "id, product_title, price, product_image_src, product_url, sizes, colors, display_name, profile_pic_url",
+          "id, title, brand, price_egp, image_url, product_url, sizes, colors",
           { count: "exact" },
-        )
-        .eq("footwear", true);
-      if (searchTerm) query = query.ilike("product_title", `%${searchTerm}%`);
+        );
+      if (searchTerm) query = query.ilike("title", `%${searchTerm}%`);
       if (size) query = query.contains("sizes", [size]);
       if (colors.length > 0) query = query.overlaps("colors", colors);
-      if (minPrice) query = query.gte("price", Number(minPrice));
-      if (maxPrice) query = query.lte("price", Number(maxPrice));
+      if (minPrice) query = query.gte("price_egp", Number(minPrice));
+      if (maxPrice) query = query.lte("price_egp", Number(maxPrice));
 
       const { data, count, error } = await query
-        .order("product_title", { ascending: true })
+        .order("title", { ascending: true })
         .order("id", { ascending: true })
         .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
       if (error) throw error;
       return {
         products: ((data ?? []) as Row[]).map((product): Product => ({
           id: product.id,
-          title: product.product_title,
-          price_egp: Number(product.price),
-          image_url: product.product_image_src,
+          title: product.title,
+          brand: product.brand,
+          price_egp: Number(product.price_egp),
+          image_url: product.image_url,
           product_url: product.product_url,
           sizes: product.sizes,
           colors: product.colors,
-          display_name: product.display_name,
-          profile_pic_url: product.profile_pic_url,
         })),
         totalCount: count ?? 0,
       };
