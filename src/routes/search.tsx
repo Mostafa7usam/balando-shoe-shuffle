@@ -16,7 +16,7 @@ import {
 
 export const Route = createFileRoute("/search")({
   validateSearch: (search: Record<string, unknown>): { q?: string } => {
-    if (typeof search.q === "string" && search.q.trim()) return { q: search.q.trim() };
+    if (typeof search["q"] === "string" && search["q"].trim()) return { q: search["q"].trim() };
     return {};
   },
   head: () => ({
