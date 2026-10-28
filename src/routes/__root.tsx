@@ -79,11 +79,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "google-site-verification", content: "gU8tZMraoEiVjPalki8AkFIVZfm6CzLBmIsz6iAQ1bo" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "waggado — Egypt's Ultimate Footwear Finder" },
+      {
+        name: "description",
+        content:
+          "One place to find every footwear store in Egypt — sneakers, sandals, boots, clogs and more, filtered by size, color and price.",
+      },
+      { name: "author", content: "waggado" },
+      { property: "og:title", content: "waggado — Egypt's Ultimate Footwear Finder" },
+      {
+        property: "og:description",
+        content: "One place to find every footwear store in Egypt.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
