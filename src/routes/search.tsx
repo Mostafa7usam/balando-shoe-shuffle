@@ -239,9 +239,12 @@ function Index() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
           <div>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">
+            <Link
+              to="/"
+              className="font-display text-3xl font-extrabold tracking-tight text-foreground hover:text-primary"
+            >
               waggado
-            </h1>
+            </Link>
             <p className="text-sm text-muted-foreground">
               Your one stop shop for the perfect shoes in Egypt
             </p>
