@@ -171,7 +171,7 @@ function Index() {
           "id, title, brand, price_egp, image_url, product_url, sizes, colors",
           { count: "exact" },
         );
-      if (searchTerm) query = query.ilike("title", `%${searchTerm}%`);
+      if (searchTerm) query = query.or(`title.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%`);
       if (size) query = query.contains("sizes", [size]);
       if (colors.length > 0) query = query.overlaps("colors", colors);
       if (minPrice) query = query.gte("price_egp", Number(minPrice));
