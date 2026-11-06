@@ -195,7 +195,7 @@ function Landing() {
       <main>
         <section className="relative overflow-hidden">
           <div className="mx-auto max-w-6xl px-4 pb-8 pt-4 sm:pb-10 sm:pt-8">
-            <div className="mx-auto max-w-3xl">
+            <div>
               <h1 className="font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
                 Stop scrolling ads.
                 <span className="block text-primary">Start finding shoes.</span>
@@ -217,15 +217,15 @@ function Landing() {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
-              <img
-                src="/hero-footwear.jpg"
-                alt="Sneakers hanging from wires against a blue sky"
-                width={2000}
-                height={1333}
-                className="mt-6 aspect-[2/1] w-full rounded-3xl object-cover"
-                fetchPriority="high"
-              />
             </div>
+            <img
+              src="/hero-footwear.jpg"
+              alt="Colorful sneakers displayed on a shoe wall"
+              width={2000}
+              height={1372}
+              className="mt-6 aspect-[2/1] w-full rounded-3xl object-cover"
+              fetchPriority="high"
+            />
           </div>
         </section>
 
