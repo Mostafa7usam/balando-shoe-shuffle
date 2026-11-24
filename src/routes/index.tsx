@@ -1,8 +1,9 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowRight, BadgeCheck, Search, SlidersHorizontal, Store, Tag } from "lucide-react";
+import { ArrowRight, BadgeCheck, SlidersHorizontal, Store, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { SiteHeader } from "@/components/site-header";
 import {
   Carousel,
   CarouselContent,
@@ -176,22 +177,7 @@ function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <Link to="/" className="block">
-            <span className="font-display text-2xl font-extrabold tracking-tight text-foreground">
-              waggado
-            </span>
-          </Link>
-          <Link
-            to="/search"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:px-5"
-          >
-            <Search className="h-4 w-4" />
-            Browse all shoes
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main>
         <section className="relative overflow-hidden">
@@ -202,8 +188,8 @@ function Landing() {
                 <span className="block text-primary">Start finding shoes.</span>
               </h1>
               <p className="mt-4 max-w-xl text-lg text-muted-foreground">
-                The name waggado is inspired by the Arabic word <em>وَجَد</em>, meaning “to find.”
-                We bring shoes from stores across Egypt together, filtered by{" "}
+                The name waggado is inspired by the Arabic word <em>وَجَد</em>, meaning “to find.” We
+                bring shoes from stores across Egypt together, filtered by{" "}
                 <strong className="text-foreground">size</strong>,{" "}
                 <strong className="text-foreground">color</strong> and{" "}
                 <strong className="text-foreground">price</strong>. Best fit. Best price. Best

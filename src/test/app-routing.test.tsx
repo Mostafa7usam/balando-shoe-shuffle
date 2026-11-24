@@ -22,4 +22,12 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).toBe("/search");
   });
+
+  it("matches the Adidas collection page at /adidas", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    const matches = router.matchRoutes("/adidas");
+
+    expect(matches.at(-1)?.routeId).toBe("/adidas");
+  });
 });
