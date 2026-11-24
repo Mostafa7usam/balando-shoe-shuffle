@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { SiteHeader } from "@/components/site-header";
 import { Search, X } from "lucide-react";
 import { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -241,144 +242,9 @@ function SearchPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
-          <div>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight text-foreground">
-              waggado
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Your one stop shop for the perfect shoes in Egypt
-            </p>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-6xl px-4 py-8">
-        {/* Filters */}
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-            {/* Search */}
-            <div className="lg:col-span-2">
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Search
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  placeholder="Search by product name…"
-                  className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            </div>
-
-            {/* Price range */}
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Price (EGP)
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  value={minPrice}
-                  onChange={(e) => {
-                    setMinPrice(e.target.value.replace(/\D/g, ""));
-                    setPage(1);
-                  }}
-                  placeholder="Min"
-                  inputMode="numeric"
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-                <span className="text-muted-foreground">–</span>
-                <input
-                  value={maxPrice}
-                  onChange={(e) => {
-                    setMaxPrice(e.target.value.replace(/\D/g, ""));
-                    setPage(1);
-                  }}
-                  placeholder="Max"
-                  inputMode="numeric"
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            </div>
-
-            {/* Size */}
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Size (EU)
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                {SIZES.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => {
-                      setSize(size === s ? null : s);
-                      setPage(1);
-                    }}
-                    className={`h-9 w-9 rounded-lg border text-sm font-medium transition-colors ${
-                      size === s
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-background text-foreground hover:bg-accent"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Colors */}
-          <div className="mt-5">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Colors
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {availableColors.map((c) => {
-                const active = colors.includes(c);
-                return (
-                  <button
-                    key={c}
-                    onClick={() => toggleColor(c)}
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
-                      active
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-background text-foreground hover:bg-accent"
-                    }`}
-                  >
-                    <span
-                      className="h-3.5 w-3.5 rounded-full border border-border"
-                      style={{ backgroundColor: COLOR_SWATCHES[c] ?? "#ccc" }}
-                    />
-                    {c}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {hasFilters && (
-            <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
-              <p className="text-sm text-muted-foreground">
-                {productPage.totalCount} {productPage.totalCount === 1 ? "shoe" : "shoes"} found
-              </p>
-              <button
-                onClick={clearAll}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-              >
-                <X className="h-4 w-4" />
-                Clear all filters
-              </button>
-            </div>
-          )}
-        </section>
-
         {/* Results */}
         <section className="mt-8">
           {isLoading ? (
@@ -538,6 +404,132 @@ function SearchPage() {
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
+            </div>
+          )}
+        </section>
+
+        {/* Filters */}
+        <section className="mt-8 rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <h2 className="mb-4 font-display text-xl font-bold text-foreground">
+            Refine these results
+          </h2>
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            {/* Search */}
+            <div className="lg:col-span-2">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Search
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  placeholder="Search by product name…"
+                  className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+            </div>
+
+            {/* Price range */}
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Price (EGP)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  value={minPrice}
+                  onChange={(e) => {
+                    setMinPrice(e.target.value.replace(/\D/g, ""));
+                    setPage(1);
+                  }}
+                  placeholder="Min"
+                  inputMode="numeric"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <span className="text-muted-foreground">–</span>
+                <input
+                  value={maxPrice}
+                  onChange={(e) => {
+                    setMaxPrice(e.target.value.replace(/\D/g, ""));
+                    setPage(1);
+                  }}
+                  placeholder="Max"
+                  inputMode="numeric"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+            </div>
+
+            {/* Size */}
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Size (EU)
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {SIZES.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      setSize(size === s ? null : s);
+                      setPage(1);
+                    }}
+                    className={`h-9 w-9 rounded-lg border text-sm font-medium transition-colors ${
+                      size === s
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Colors */}
+          <div className="mt-5">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Colors
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {availableColors.map((c) => {
+                const active = colors.includes(c);
+                return (
+                  <button
+                    key={c}
+                    onClick={() => toggleColor(c)}
+                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
+                      active
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    <span
+                      className="h-3.5 w-3.5 rounded-full border border-border"
+                      style={{ backgroundColor: COLOR_SWATCHES[c] ?? "#ccc" }}
+                    />
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {hasFilters && (
+            <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+              <p className="text-sm text-muted-foreground">
+                {productPage.totalCount} {productPage.totalCount === 1 ? "shoe" : "shoes"} found
+              </p>
+              <button
+                onClick={clearAll}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                <X className="h-4 w-4" />
+                Clear all filters
+              </button>
             </div>
           )}
         </section>
