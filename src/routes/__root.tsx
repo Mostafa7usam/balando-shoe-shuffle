@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -109,8 +110,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isArabic = pathname === "/ar" || pathname.startsWith("/ar/");
+  const lang = isArabic ? "ar-EG" : "en";
+  const dir = isArabic ? "rtl" : "ltr";
+
   return (
-    <html lang="en">
+    <html lang={lang} dir={dir}>
       <head>
         <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-MLNWTBW9" />
         <script
