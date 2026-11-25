@@ -316,6 +316,32 @@ function Landing() {
               </p>
             )}
           </div>
+          <div className="mx-auto max-w-3xl px-4 pb-12 pt-4">
+            <h2 className="font-display text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+              Frequently asked questions
+            </h2>
+            <div className="mt-6 space-y-6">
+              {[
+                [
+                  "Does waggado sell shoes?",
+                  "No. waggado collects offers from independent footwear stores across Egypt so you can compare them easily. When you open a product, you go directly to the store page and buy from the store.",
+                ],
+                [
+                  "How do I know if a product is authentic?",
+                  "waggado does not verify product authenticity. Before paying, ask the store about the product's source and return policy.",
+                ],
+                [
+                  "Are the prices on the website final?",
+                  "Prices are collected from store pages and may change. The final price is the one shown on the store page at the time of purchase.",
+                ],
+              ].map(([question, answer]) => (
+                <div key={question}>
+                  <h3 className="font-bold text-foreground">{question}</h3>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="overflow-hidden rounded-3xl bg-primary px-6 py-10 text-center text-primary-foreground shadow-xl shadow-primary/20 sm:py-12">
             <BadgeCheck className="mx-auto h-10 w-10 opacity-80" />
             <h2 className="mx-auto mt-3 max-w-2xl font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
