@@ -1,7 +1,7 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Search, ShoppingBag, SlidersHorizontal, Store } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Search, ShoppingBag, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { normalizeArabicQuery } from "@/lib/arabic-query";
 import { fetchTrending, type TrendingProduct, type TrendingResult } from "@/lib/trending";
@@ -165,6 +165,14 @@ function ArabicLanding() {
               دوّر
             </button>
           </form>
+          <img
+            src="/hero-footwear.jpg"
+            alt="مجموعة أحذية ملونة"
+            width={2000}
+            height={1372}
+            className="mt-8 aspect-[2/1] w-full rounded-3xl object-cover"
+            fetchPriority="high"
+          />
         </section>
 
         <section className="border-y border-border bg-card">
@@ -269,6 +277,22 @@ function ArabicLanding() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-12">
+          <div className="overflow-hidden rounded-3xl bg-primary px-6 py-10 text-center text-primary-foreground shadow-xl shadow-primary/20 sm:py-12">
+            <BadgeCheck className="mx-auto h-10 w-10 opacity-80" />
+            <h2 className="mx-auto mt-3 max-w-2xl font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
+              الكوتشي المناسب ليك موجود في مصر. دوس ودور عليه.
+            </h2>
+            <Link
+              to="/search"
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-background px-7 py-3.5 font-display font-bold text-primary transition-transform hover:scale-[1.03]"
+            >
+              ابدأ البحث
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
           </div>
         </section>
       </main>
