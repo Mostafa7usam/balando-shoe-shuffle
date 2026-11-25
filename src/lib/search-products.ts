@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeArabicQuery } from "@/lib/arabic-query";
 
 export type SearchProduct = {
   id: number;
@@ -48,7 +49,7 @@ export async function fetchSearchPage({
     profile_pic_url: string | null;
   };
 
-  const searchTerm = q.trim();
+  const searchTerm = normalizeArabicQuery(q);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from("scraper_products")

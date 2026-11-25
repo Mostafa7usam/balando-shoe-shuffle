@@ -92,6 +92,9 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: "https://waggado.app/" },
+      { rel: "alternate", hreflang: "ar-EG", href: "https://waggado.app/ar" },
+      { rel: "alternate", hreflang: "en", href: "https://waggado.app/" },
+      { rel: "alternate", hreflang: "x-default", href: "https://waggado.app/" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -121,7 +124,13 @@ function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SiteHeader />
+      <SiteHeader
+        rightContent={
+          <Link to="/ar" className="text-sm font-semibold text-primary hover:underline">
+            العربية
+          </Link>
+        }
+      />
 
       <main>
         <section className="relative overflow-hidden">

@@ -30,4 +30,10 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).toBe("/adidas");
   });
+
+  it("matches the Arabic homepage at /ar", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+    const matches = router.matchRoutes("/ar");
+    expect(matches.at(-1)?.routeId).toBe("/ar/");
+  });
 });
