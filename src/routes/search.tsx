@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { Search, X } from "lucide-react";
 import { z } from "zod";
+import { fetchSearchPage } from "@/lib/search-products";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Pagination,
@@ -20,48 +20,55 @@ export const Route = createFileRoute("/search")({
   validateSearch: z.object({
     q: z.string().optional(),
   }),
-  head: () => ({
-    meta: [
-      { title: "waggado — Find your perfect shoes in Egypt" },
-      {
-        name: "description",
-        content:
-          "waggado is your one stop shop for finding the perfect shoes in Egypt. Filter by size, color, price and search across top brands.",
-      },
-      { property: "og:title", content: "waggado — Find your perfect shoes in Egypt" },
-      {
-        property: "og:description",
-        content:
-          "Filter shoes by size, color, price and search term. Your one stop shoe shop for Egypt.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [
-      { rel: "canonical", href: "https://waggado.app/search" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Outfit:wght@400;500;600;700&display=swap",
-      },
-    ],
-  }),
+  loaderDeps: ({ search }) => ({ q: search.q }),
+  loader: async ({ deps }) => {
+    try {
+      return {
+        q: deps.q ?? "",
+        productPage: await fetchSearchPage({ q: deps.q ?? "", page: 1 }),
+      };
+    } catch (error) {
+      console.error("[search loader]", error);
+      return { q: deps.q ?? "", productPage: null };
+    }
+  },
+  head: ({ loaderData }) => {
+    const q = loaderData?.q ?? "";
+    const title = q
+      ? `${q} shoes in Egypt – waggado`
+      : "Shoes in Egypt – Search & Compare Prices | waggado";
+    return {
+      meta: [
+        { title },
+        {
+          name: "description",
+          content:
+            "waggado is your one stop shop for finding the perfect shoes in Egypt. Filter by size, color, price and search across top brands.",
+        },
+        { property: "og:title", content: title },
+        {
+          property: "og:description",
+          content:
+            "Filter shoes by size, color, price and search term. Your one stop shoe shop for Egypt.",
+        },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        ...(q ? [{ name: "robots", content: "noindex, follow" }] : []),
+      ],
+      links: [
+        { rel: "canonical", href: "https://waggado.app/search" },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Outfit:wght@400;500;600;700&display=swap",
+        },
+      ],
+    };
+  },
   staticData: { sitemap: true },
   component: SearchPage,
 });
-
-type Product = {
-  id: number;
-  title: string;
-  price_egp: number;
-  image_url: string | null;
-  product_url: string | null;
-  sizes: string[] | null;
-  colors: string[] | null;
-  display_name: string | null;
-  profile_pic_url: string | null;
-};
 
 const COLOR_SWATCHES: Record<string, string> = {
   black: "#1a1a1a",
@@ -100,7 +107,15 @@ function getProductUrl(value: string | null) {
   }
 }
 
-function ProductImage({ src, title }: { src: string | null; title: string }) {
+function ProductImage({
+  src,
+  title,
+  loading,
+}: {
+  src: string | null;
+  title: string;
+  loading: "eager" | "lazy";
+}) {
   const [hasError, setHasError] = useState(false);
 
   if (!src || hasError) {
@@ -115,7 +130,8 @@ function ProductImage({ src, title }: { src: string | null; title: string }) {
     <img
       src={src}
       alt={title}
-      loading="lazy"
+      loading={loading}
+      decoding="async"
       onError={() => setHasError(true)}
       className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
     />
@@ -124,6 +140,7 @@ function ProductImage({ src, title }: { src: string | null; title: string }) {
 
 function SearchPage() {
   const { q } = Route.useSearch();
+  const loaderData = Route.useLoaderData();
   const [search, setSearch] = useState(q ?? "");
   const [size, setSize] = useState<string | null>(null);
   const [colors, setColors] = useState<string[]>([]);
@@ -156,53 +173,23 @@ function SearchPage() {
       minPrice,
       maxPrice,
     ],
-    queryFn: async () => {
-      type Row = {
-        id: number;
-        product_title: string;
-        price: number | string;
-        product_image_src: string | null;
-        product_url: string | null;
-        sizes: string[] | null;
-        colors: string[] | null;
-        display_name: string | null;
-        profile_pic_url: string | null;
-      };
-      const searchTerm = debouncedSearch.trim();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = (supabase as any)
-        .from("scraper_products")
-        .select(
-          "id, product_title, price, product_image_src, product_url, sizes, colors, display_name, profile_pic_url",
-          { count: "exact" },
-        )
-        .eq("footwear", true);
-      if (searchTerm) query = query.ilike("product_title", `%${searchTerm}%`);
-      if (size) query = query.contains("sizes", [size]);
-      if (colors.length > 0) query = query.overlaps("colors", colors);
-      if (minPrice) query = query.gte("price", Number(minPrice));
-      if (maxPrice) query = query.lte("price", Number(maxPrice));
-
-      const { data, count, error } = await query
-        .order("product_title", { ascending: true })
-        .order("id", { ascending: true })
-        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-      if (error) throw error;
-      return {
-        products: ((data ?? []) as Row[]).map((product): Product => ({
-          id: product.id,
-          title: product.product_title,
-          price_egp: Number(product.price),
-          image_url: product.product_image_src,
-          product_url: product.product_url,
-          sizes: product.sizes,
-          colors: product.colors,
-          display_name: product.display_name,
-          profile_pic_url: product.profile_pic_url,
-        })),
-        totalCount: count ?? 0,
-      };
-    },
+    queryFn: () =>
+      fetchSearchPage({
+        q: debouncedSearch,
+        size,
+        colors,
+        minPrice,
+        maxPrice,
+        page,
+      }),
+    ...(debouncedSearch === loaderData.q &&
+    size === null &&
+    colors.length === 0 &&
+    minPrice === "" &&
+    maxPrice === "" &&
+    page === 1
+      ? { initialData: loaderData.productPage ?? undefined, staleTime: 60_000 }
+      : {}),
   });
 
   const products = productPage.products;
@@ -409,7 +396,7 @@ function SearchPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {products.map((p) => {
+              {products.map((p, index) => {
                 const productUrl = getProductUrl(p.product_url);
                 const displayName = p.display_name?.trim() || null;
                 const profilePicUrl = p.profile_pic_url?.trim() || null;
@@ -423,7 +410,11 @@ function SearchPage() {
                     }`}
                   >
                     <div className="aspect-square overflow-hidden bg-muted">
-                      <ProductImage src={p.image_url} title={p.title} />
+                      <ProductImage
+                        src={p.image_url}
+                        title={p.title}
+                        loading={index < 4 ? "eager" : "lazy"}
+                      />
                     </div>
                     <div className="p-4">
                       <h3 className="mt-0.5 line-clamp-1 font-display font-bold text-foreground">

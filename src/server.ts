@@ -35,6 +35,26 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   });
 }
 
+function addPublicPageCacheHeader(request: Request, response: Response): Response {
+  if (request.method !== "GET" || response.status !== 200) return response;
+  if (!(response.headers.get("content-type") ?? "").includes("text/html")) return response;
+
+  const url = new URL(request.url);
+  const shouldCache =
+    url.pathname === "/" ||
+    url.pathname === "/adidas" ||
+    (url.pathname === "/search" && !url.searchParams.get("q"));
+  if (!shouldCache) return response;
+
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=86400");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 function isH3SwallowedErrorBody(body: string): boolean {
   try {
     const payload = JSON.parse(body) as { unhandled?: unknown; message?: unknown };
@@ -49,7 +69,7 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return addPublicPageCacheHeader(request, await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {

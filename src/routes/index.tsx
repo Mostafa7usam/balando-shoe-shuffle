@@ -1,9 +1,10 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { createServerFn } from "@tanstack/react-start";
 import { ArrowRight, BadgeCheck, SlidersHorizontal, Store, Tag } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
+import { fetchTrending, type TrendingProduct, type TrendingResult } from "@/lib/trending";
 import {
   Carousel,
   CarouselContent,
@@ -13,33 +14,17 @@ import {
 } from "@/components/ui/carousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-type TrendingProduct = {
-  id: number;
-  title: string;
-  price_egp: number;
-  image_url: string | null;
-  product_url: string | null;
-  display_name: string | null;
-  profile_pic_url: string | null;
-  trending_query: string;
-};
+const getTrending = createServerFn({ method: "GET" }).handler(fetchTrending);
 
-const TRENDING_SEARCHES = [
-  { label: "Adidas", query: "adidas", interest: 63 },
-  { label: "Nike", query: "nike", interest: 25 },
-  { label: "Puma", query: "puma", interest: 13 },
-  { label: "Skechers", query: "skechers", interest: 11 },
-  { label: "Sneakers", query: "sneakers", interest: 10 },
-  { label: "Slippers", query: "slippers", interest: 10 },
-  { label: "Crocs", query: "crocs", interest: 8 },
-  { label: "ASICS", query: "asics", interest: 7 },
-  { label: "Running shoes", query: "running shoes", interest: 6 },
-  { label: "Clogs", query: "clogs", interest: 5 },
-  { label: "Sandals", query: "sandals", interest: 5 },
-  { label: "Puma Speedcat", query: "puma speedcat", interest: 1 },
-  { label: "Nike Mind", query: "nike mind", interest: 1 },
-  { label: "ASICS Gel", query: "asics gel", interest: 1 },
-];
+function mapTrendingProducts(results: TrendingResult[]): TrendingProduct[] {
+  const uniqueProducts = new Map<number, TrendingProduct>();
+  for (const result of results) {
+    if (result.product && !uniqueProducts.has(result.product.id)) {
+      uniqueProducts.set(result.product.id, result.product);
+    }
+  }
+  return [...uniqueProducts.values()];
+}
 
 function getProductUrl(value: string | null) {
   if (!value) return null;
@@ -81,6 +66,14 @@ function TrendingProductImage({ src, title }: { src: string | null; title: strin
 }
 
 export const Route = createFileRoute("/")({
+  loader: async () => {
+    try {
+      return await getTrending();
+    } catch (error) {
+      console.error("[trending loader]", error);
+      return [];
+    }
+  },
   head: () => ({
     meta: [
       { title: "waggado — Egypt's Ultimate Footwear Finder" },
@@ -112,67 +105,18 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const loaderData = Route.useLoaderData();
+  const loaderProducts = mapTrendingProducts(loaderData);
   const {
     data: trendingProducts = [],
     isLoading: isTrendingLoading,
     error: trendingError,
   } = useQuery({
     queryKey: ["homepage-trending-products"],
-    queryFn: async () => {
-      type Row = {
-        id: number;
-        product_title: string;
-        price: number | string;
-        product_image_src: string | null;
-        product_url: string | null;
-        display_name: string | null;
-        profile_pic_url: string | null;
-      };
-
-      const results = await Promise.all(
-        TRENDING_SEARCHES.map(async (trend) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data, error } = await (supabase as any)
-            .from("scraper_products")
-            .select(
-              "id, product_title, price, product_image_src, product_url, display_name, profile_pic_url",
-            )
-            .eq("footwear", true)
-            .ilike("product_title", `%${trend.query}%`)
-            .order("product_title", { ascending: true })
-            .order("id", { ascending: true })
-            .limit(10);
-
-          if (error) {
-            throw new Error(`Could not load products matching "${trend.query}": ${error.message}`);
-          }
-
-          const candidates = (data as Row[] | null) ?? [];
-          const product =
-            candidates.find(
-              (candidate) => candidate.product_title.trim().toLowerCase() !== trend.query,
-            ) ?? candidates[0];
-          return product
-            ? {
-                id: product.id,
-                title: product.product_title,
-                price_egp: Number(product.price),
-                image_url: product.product_image_src,
-                product_url: product.product_url,
-                display_name: product.display_name,
-                profile_pic_url: product.profile_pic_url,
-                trending_query: trend.label,
-              }
-            : null;
-        }),
-      );
-
-      const uniqueProducts = new Map<number, TrendingProduct>();
-      for (const product of results) {
-        if (product && !uniqueProducts.has(product.id)) uniqueProducts.set(product.id, product);
-      }
-      return [...uniqueProducts.values()];
-    },
+    queryFn: async () => mapTrendingProducts(await getTrending()),
+    ...(loaderProducts.length > 0
+      ? { initialData: loaderProducts, staleTime: 60 * 60 * 1000 }
+      : {}),
   });
 
   return (
